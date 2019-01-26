@@ -12,7 +12,7 @@ climate:
     port: 80
     scan_interval: 10
 """
-REQUIREMENTS = ['haanna==0.4.3']
+REQUIREMENTS = ['haanna==0.6.1']
 
 import voluptuous as vol
 import logging
