@@ -17,11 +17,20 @@ REQUIREMENTS = ['haanna==0.6.1']
 import voluptuous as vol
 import logging
 
-from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, ATTR_TEMPERATURE)
+import xml.etree.cElementTree as Etree
+
+#from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+try:
+    from homeassistant.components.climate.const import (
+        SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE)
+except ImportError:
+    from homeassistant.components.climate import (
+        SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE)
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, ATTR_TEMPERATURE, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +74,7 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = None
         self._target_min_temperature = 4
         self._target_max_temperature = 30
+        self._state = None
         self._away_mode = False
         _LOGGER.debug("Init called")
         self.update()
@@ -74,6 +84,11 @@ class ThermostatDevice(ClimateDevice):
         """Polling is needed"""
         return True
 
+    @property
+    def state(self):
+        """Return the current state"""
+        return self._state
+
     def update(self):
         """Update the data from the thermostat"""
         import haanna
@@ -82,11 +97,25 @@ class ThermostatDevice(ClimateDevice):
         self._current_temperature = api.get_temperature(domain_objects)
         self._outdoor_temperature = api.get_outdoor_temperature(domain_objects)
         self._temperature = api.get_target_temperature(domain_objects)
+        self._hold_mode = api.get_current_preset(domain_objects)
+        # Determine heater state from domain object (Etree XML) if any, assume off
+        try:
+            if domain_objects.find("appliance[type='heater_central']/logs/point_log/period/measurement").text == 'on':
+              self._state=STATE_ON
+            else:
+              self._state=STATE_OFF
+        except:
+            self._state=STATE_OFF
         _LOGGER.debug("Update called")
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def current_hold_mode(self):
+        """Return the current hold mode, e.g., home, away, temp."""
+        return self._hold_mode
 
     @property
     def current_temperature(self):
