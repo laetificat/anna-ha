@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
     ])
 
-_LOGGER.info("Anna: custom component loading (Anna PlugWise climate)")
+_LOGGER.debug("Anna: custom component loading (Anna PlugWise climate)")
 
 class ThermostatDevice(ClimateDevice):
     """Representation of an Anna thermostat"""
@@ -133,9 +133,9 @@ class ThermostatDevice(ClimateDevice):
         try:
              self._api.ping_anna_thermostat()
         except:
-            _LOGGER.warning("Anna: Unable to ping, platform not ready")
+            _LOGGER.error("Anna: Unable to ping, platform not ready")
             raise PlatformNotReady
-        _LOGGER.info("Anna: platform ready")
+        _LOGGER.debug("Anna: platform ready")
         self.update()
 
     @property
@@ -220,7 +220,7 @@ class ThermostatDevice(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature"""
-        _LOGGER.info("Anna: Adjusting temperature")
+        _LOGGER.debug("Anna: Adjusting temperature")
         import haanna
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is not None and temperature > CONF_MIN_TEMP and temperature < CONF_MAX_TEMP:
@@ -234,7 +234,7 @@ class ThermostatDevice(ClimateDevice):
 
     def set_hold_mode(self, hold_mode):
         """Set the hold mode."""
-        _LOGGER.info("Anna: Adjusting hold_mode (i.e. preset)")
+        _LOGGER.debug("Anna: Adjusting hold_mode (i.e. preset)")
         if hold_mode is not None and hold_mode in HOLD_MODES:
             domain_objects = self._api.get_domain_objects()
             self._hold_mode = hold_mode
