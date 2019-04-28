@@ -10,7 +10,9 @@ climate:
     password: short_id
     host: 192.168.1.60
     port: 80
-    scan_interval: 10
+    min_temp: 4
+    max_temp: 30
+    scan_interval: 10   # optional
 """
 
 import voluptuous as vol
@@ -44,38 +46,52 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, 
     STATE_ON, 
     STATE_OFF)
+
 import homeassistant.helpers.config_validation as cv
 
-SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_HOLD_MODE | SUPPORT_AWAY_MODE )
+from homeassistant.exceptions import PlatformNotReady
+
+SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE )
+#SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_HOLD_MODE | SUPPORT_AWAY_MODE )
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:thermometer"
+# Configuration directives
+CONF_MIN_TEMP = 'min_temp'
+CONF_MAX_TEMP = 'max_temp'
 
 DEFAULT_NAME = 'Anna Thermostat'
 DEFAULT_USERNAME = 'smile'
 DEFAULT_TIMEOUT = 10
 BASE_URL = 'http://{0}:{1}{2}'
+DEFAULT_ICON = "mdi:thermometer"
 
 # Hold modes
-MODE_HOME = "home"
-MODE_VACATION = "vacation"
-MODE_NO_FROST = "no_frost"
-MODE_SLEEP = "asleep"
-MODE_AWAY = "away"
+HOLD_MODE_HOME = "home"
+HOLD_MODE_VACATION = "vacation"
+HOLD_MODE_NO_FROST = "no_frost"
+HOLD_MODE_SLEEP = "asleep"
+HOLD_MODE_AWAY = "away"
+
+HOLD_MODES = [ HOLD_MODE_HOME, HOLD_MODE_VACATION, HOLD_MODE_NO_FROST, HOLD_MODE_SLEEP, HOLD_MODE_AWAY ]
+# Operation list
+# todo; read these (schedules) from API
+DEFAULT_OPERATION_LIST = [ STATE_AUTO, STATE_IDLE ]
 
 # Change defaults to match Anna
 DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
+# Read platform configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=80): cv.string,
+    vol.Optional(CONF_PORT, default=80): cv.port,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+    vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): cv.positive_int,
+    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): cv.positive_int,
     vol.Required(CONF_PASSWORD): cv.string
 })
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Anna thermostat"""
@@ -85,15 +101,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
             config.get(CONF_HOST),
-            config.get(CONF_PORT)
+            config.get(CONF_PORT),
+            config.get(CONF_MIN_TEMP),
+            config.get(CONF_MAX_TEMP)
         )
     ])
 
+_LOGGER.info("Anna: custom component loading (Anna PlugWise climate)")
 
 class ThermostatDevice(ClimateDevice):
     """Representation of an Anna thermostat"""
-    def __init__(self, name, username, password, host, port):
-        _LOGGER.debug("Init called")
+    def __init__(self, name, username, password, host, port, min_temp, max_temp):
+        _LOGGER.debug("Anna: Init called")
         self._name = name
         self._username = username
         self._password = password
@@ -105,8 +124,18 @@ class ThermostatDevice(ClimateDevice):
         self._state = None
         self._hold_mode = None
         self._away_mode = False
-        self._operation_list = [ STATE_AUTO, STATE_IDLE ]
-        _LOGGER.debug("Initializing API")
+        self._min_temp = min_temp
+        self._max_temp = max_temp
+        self._operation_list = DEFAULT_OPERATION_LIST
+
+        _LOGGER.debug("Anna: Initializing API")
+        self._api = haanna.Haanna(self._username, self._password, self._host, self._port)
+        try:
+             self._api.ping_anna_thermostat()
+        except:
+            _LOGGER.warning("Anna: Unable to ping, platform not ready")
+            raise PlatformNotReady
+        _LOGGER.info("Anna: platform ready")
         self.update()
 
     @property
@@ -121,21 +150,20 @@ class ThermostatDevice(ClimateDevice):
 
     def update(self):
         """Update the data from the thermostat"""
-        api = haanna.Haanna(self._username, self._password, self._host)
-        domain_objects = api.get_domain_objects()
-        self._current_temperature = api.get_temperature(domain_objects)
-        self._outdoor_temperature = api.get_outdoor_temperature(domain_objects)
-        self._temperature = api.get_target_temperature(domain_objects)
-        self._hold_mode = api.get_current_preset(domain_objects)
-        if api.get_mode(domain_objects) == True:
+        _LOGGER.debug("Anna: Update called")
+        domain_objects = self._api.get_domain_objects()
+        self._current_temperature = self._api.get_temperature(domain_objects)
+        self._outdoor_temperature = self._api.get_outdoor_temperature(domain_objects)
+        self._temperature = self._api.get_target_temperature(domain_objects)
+        self._hold_mode = self._api.get_current_preset(domain_objects)
+        if self._api.get_mode(domain_objects) == True:
           self._operation_mode=STATE_AUTO
         else:
           self._operation_mode=STATE_IDLE
-        if api.get_heating_status(domain_objects) == True:
+        if self._api.get_heating_status(domain_objects) == True:
           self._state=STATE_ON
         else:
           self._state=STATE_OFF
-        _LOGGER.debug("Update called")
 
     @property
     def name(self):
@@ -159,11 +187,19 @@ class ThermostatDevice(ClimateDevice):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return ICON
+        return DEFAULT_ICON
 
     @property
     def current_temperature(self):
         return self._current_temperature
+
+    @property
+    def min_temp(self):
+        return self._min_temp
+
+    @property
+    def max_temp(self):
+        return self._max_temp
 
     @property
     def target_temperature(self):
@@ -184,23 +220,26 @@ class ThermostatDevice(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature"""
+        _LOGGER.info("Anna: Adjusting temperature")
         import haanna
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None:
-            api = haanna.Haanna(self._username, self._password, self._host)
+        if temperature is not None and temperature > CONF_MIN_TEMP and temperature < CONF_MAX_TEMP:
             self._temperature = temperature
-            domain_objects = api.get_domain_objects()
-            api.set_temperature(domain_objects, temperature)
+            domain_objects = self._api.get_domain_objects()
+            self._api.set_temperature(domain_objects, temperature)
             self.schedule_update_ha_state()
+            _LOGGER.debug('Anna: Changing temporary temperature')
+        else:
+            _LOGGER.error('Anna: Failed to change temperature (invalid temperature given)')
 
     def set_hold_mode(self, hold_mode):
         """Set the hold mode."""
-        if hold_mode is not None:
-            api = haanna.Haanna(self._username, self._password, self._host)
-            domain_objects = api.get_domain_objects()
+        _LOGGER.info("Anna: Adjusting hold_mode (i.e. preset)")
+        if hold_mode is not None and hold_mode in HOLD_MODES:
+            domain_objects = self._api.get_domain_objects()
             self._hold_mode = hold_mode
-            api.set_preset(domain_objects, hold_mode)
-            _LOGGER.info('Changing hold mode/preset')
+            self._api.set_preset(domain_objects, hold_mode)
+            _LOGGER.debug('Anna: Changing hold mode/preset')
         else:
-            _LOGGER.error('Failed to change hold mode (invalid preset)')
+            _LOGGER.error('Anna: Failed to change hold mode (invalid or no preset given)')
 
