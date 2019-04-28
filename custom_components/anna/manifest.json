@@ -2,7 +2,7 @@
   "domain": "anna",
   "name": "Plugwise_Anna",
   "documentation": "https://github.com/laetificat/anna-ha",
-  "dependencies": ["climate"],
+  "dependencies": [],
   "codeowners": ["@laetificat","CoMPaTech"],
   "requirements": ["haanna==0.6.2"]
 }
