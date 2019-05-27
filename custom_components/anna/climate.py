@@ -57,8 +57,8 @@ SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE )
 _LOGGER = logging.getLogger(__name__)
 
 # Configuration directives
-CONF_MIN_TEMP = 'min_temp'
-CONF_MAX_TEMP = 'max_temp'
+CONF_MIN_TEMP = 4
+CONF_MAX_TEMP = 30
 
 DEFAULT_NAME = 'Anna Thermostat'
 DEFAULT_USERNAME = 'smile'
@@ -221,7 +221,6 @@ class ThermostatDevice(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature"""
         _LOGGER.debug("Anna: Adjusting temperature")
-        import haanna
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is not None and temperature > CONF_MIN_TEMP and temperature < CONF_MAX_TEMP:
             self._temperature = temperature

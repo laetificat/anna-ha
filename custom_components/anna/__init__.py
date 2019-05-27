@@ -1,1 +1,1 @@
-REQUIREMENTS = ['haanna==0.6.2']
+"""Plugwise Anna component for HomeAssistant"""
