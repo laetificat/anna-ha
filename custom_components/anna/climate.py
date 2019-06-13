@@ -5,14 +5,12 @@ configurations.yaml
 
 climate:
   - platform: anna
-    name: Anna Thermostat
-    username: smile
+    name: Anna Thermostat # optional, only if you want to use a different name
+    username: smile       # optional, default username is smile
     password: short_id
     host: 192.168.1.60
-    port: 80
-    min_temp: 4
-    max_temp: 30
-    scan_interval: 10   # optional
+    port: 80              # optional, only needed when other than 80
+    scan_interval: 10     # optional, only needed when other than 10
 """
 
 import voluptuous as vol
@@ -93,9 +91,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string
 })
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the Anna thermostat"""
-    add_devices([
+    add_entities([
         ThermostatDevice(
             config.get(CONF_NAME),
             config.get(CONF_USERNAME),
