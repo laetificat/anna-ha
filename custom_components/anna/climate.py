@@ -9,8 +9,8 @@ climate:
     username: smile       # optional, default username is smile
     password: short_id
     host: 192.168.1.60
-    port: 80              # optional, only needed when other than 80
-    scan_interval: 10     # optional, only needed when other than 10
+    port: 80              # optional, default port is 80
+    scan_interval: 10     # optional, default scan interval is 10 seconds
 """
 
 import voluptuous as vol
