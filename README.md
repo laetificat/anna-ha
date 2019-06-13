@@ -15,12 +15,12 @@ Currently supports:
 ```yaml
 climate:
   - platform: anna
-    name: Anna Thermostat
-    username: smile
+    name: Anna Thermostat   # optional, only if you want to use a different name
+    username: smile         # optional, default username is smile
     password: your_short_id
     host: local_ip_address
-    port: port_number
-    scan_interval: 10
+    port: port_number       # optional, only needed when other than 80
+    scan_interval: 10       # optional, only needed when other than 10
 ```
 
 ## Changing hold_mode
