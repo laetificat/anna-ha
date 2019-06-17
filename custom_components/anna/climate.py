@@ -91,9 +91,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string
 })
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Anna thermostat"""
-    add_entities([
+    add_devices([
         ThermostatDevice(
             config.get(CONF_NAME),
             config.get(CONF_USERNAME),
