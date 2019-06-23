@@ -5,12 +5,12 @@ configurations.yaml
 
 climate:
   - platform: anna
-    name: Anna Thermostat # optional, only if you want to use a different name
-    username: smile       # optional, default username is smile
-    password: short_id
-    host: 192.168.1.60
-    port: 80              # optional, default port is 80
-    scan_interval: 10     # optional, default scan interval is 10 seconds
+    password: your_short_id   # required, the ID on the smile (some string of 6 characters)
+    host: local_ip_address    # required, the IP-address of your smile
+    name: Anna Thermostat     # optional, only if you want to use a different name
+    username: smile           # optional, default username is smile
+    port: 80                  # optional, default port is 80
+    scan_interval: 10         # optional, default scan interval is 10 seconds
 """
 
 import voluptuous as vol
@@ -61,6 +61,7 @@ CONF_MAX_TEMP = 30
 DEFAULT_NAME = 'Anna Thermostat'
 DEFAULT_USERNAME = 'smile'
 DEFAULT_TIMEOUT = 10
+DEFAULT_PORT = 80
 BASE_URL = 'http://{0}:{1}{2}'
 DEFAULT_ICON = "mdi:thermometer"
 
@@ -84,7 +85,7 @@ DEFAULT_MAX_TEMP = 30
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=80): cv.port,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): cv.positive_int,
     vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): cv.positive_int,
