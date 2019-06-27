@@ -18,8 +18,6 @@ import logging
 
 import xml.etree.cElementTree as Etree
 
-from haanna import Haanna
-
 from homeassistant.components.climate import (
     ClimateDevice,
     PLATFORM_SCHEMA)
@@ -52,6 +50,8 @@ from homeassistant.exceptions import PlatformNotReady
 SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE )
 #SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_HOLD_MODE | SUPPORT_AWAY_MODE )
 
+REQUIREMENTS = ['haanna']
+
 _LOGGER = logging.getLogger(__name__)
 
 # Configuration directives
@@ -61,7 +61,6 @@ CONF_MAX_TEMP = 30
 DEFAULT_NAME = 'Anna Thermostat'
 DEFAULT_USERNAME = 'smile'
 DEFAULT_TIMEOUT = 10
-BASE_URL = 'http://{0}:{1}{2}'
 DEFAULT_ICON = "mdi:thermometer"
 
 # Hold modes
@@ -127,7 +126,8 @@ class ThermostatDevice(ClimateDevice):
         self._operation_list = DEFAULT_OPERATION_LIST
 
         _LOGGER.debug("Anna: Initializing API")
-        self._api = Haanna(self._username, self._password, self._host, self._port)
+        import haanna
+        self._api = haanna.Haanna(self._username, self._password, self._host, self._port)
         try:
              self._api.ping_anna_thermostat()
         except:
