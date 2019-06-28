@@ -50,8 +50,6 @@ from homeassistant.exceptions import PlatformNotReady
 SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE )
 #SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_HOLD_MODE | SUPPORT_AWAY_MODE )
 
-REQUIREMENTS = ['haanna']
-
 _LOGGER = logging.getLogger(__name__)
 
 # Configuration directives
