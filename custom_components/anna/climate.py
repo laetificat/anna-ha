@@ -18,8 +18,6 @@ import logging
 
 import xml.etree.cElementTree as Etree
 
-from haanna import Haanna
-
 from homeassistant.components.climate import (
     ClimateDevice,
     PLATFORM_SCHEMA)
@@ -62,7 +60,6 @@ DEFAULT_NAME = 'Anna Thermostat'
 DEFAULT_USERNAME = 'smile'
 DEFAULT_TIMEOUT = 10
 DEFAULT_PORT = 80
-BASE_URL = 'http://{0}:{1}{2}'
 DEFAULT_ICON = "mdi:thermometer"
 
 # Hold modes
@@ -128,7 +125,8 @@ class ThermostatDevice(ClimateDevice):
         self._operation_list = DEFAULT_OPERATION_LIST
 
         _LOGGER.debug("Anna: Initializing API")
-        self._api = Haanna(self._username, self._password, self._host, self._port)
+        import haanna
+        self._api = haanna.Haanna(self._username, self._password, self._host, self._port)
         try:
              self._api.ping_anna_thermostat()
         except:
