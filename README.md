@@ -7,6 +7,7 @@ Currently supports:
 - Changing preset_mode 
 Todo:
 - Getting scheduled state (and schedules)
+- Making 'changing HVAC mode' work (changing HEAT to AUTO or likewise using the GUI generates an error ... it does show if Anna is heating though ;))
 
 ## Installation
 - Download release or the master branch as zip
