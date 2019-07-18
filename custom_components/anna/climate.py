@@ -24,13 +24,13 @@ from homeassistant.components.climate import (
 
 from homeassistant.components.climate.const import (
     DOMAIN,
-    SUPPORT_HOLD_MODE,
-    SUPPORT_AWAY_MODE,
-    SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    STATE_AUTO,
-    STATE_IDLE,
-    SERVICE_SET_HOLD_MODE)
+    SUPPORT_PRESET_MODE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_OFF,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE)
 
 from homeassistant.const import (
     CONF_NAME, 
@@ -39,16 +39,13 @@ from homeassistant.const import (
     CONF_USERNAME, 
     CONF_PASSWORD, 
     TEMP_CELSIUS, 
-    ATTR_TEMPERATURE, 
-    STATE_ON, 
-    STATE_OFF)
+    ATTR_TEMPERATURE)
 
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.exceptions import PlatformNotReady
 
-SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_HOLD_MODE )
-#SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_HOLD_MODE | SUPPORT_AWAY_MODE )
+SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,16 +60,14 @@ DEFAULT_PORT = 80
 DEFAULT_ICON = "mdi:thermometer"
 
 # Hold modes
-HOLD_MODE_HOME = "home"
-HOLD_MODE_VACATION = "vacation"
-HOLD_MODE_NO_FROST = "no_frost"
-HOLD_MODE_SLEEP = "asleep"
-HOLD_MODE_AWAY = "away"
+PRESET_MODE_HOME = "home"
+PRESET_MODE_VACATION = "vacation"
+PRESET_MODE_NO_FROST = "no_frost"
+PRESET_MODE_SLEEP = "asleep"
+PRESET_MODE_AWAY = "away"
 
-HOLD_MODES = [ HOLD_MODE_HOME, HOLD_MODE_VACATION, HOLD_MODE_NO_FROST, HOLD_MODE_SLEEP, HOLD_MODE_AWAY ]
-# Operation list
-# todo; read these (schedules) from API
-DEFAULT_OPERATION_LIST = [ STATE_AUTO, STATE_IDLE ]
+PRESET_MODES = [ PRESET_MODE_HOME, PRESET_MODE_VACATION, PRESET_MODE_NO_FROST, PRESET_MODE_SLEEP, PRESET_MODE_AWAY ]
+ATTR_HVAC_MODES = [ HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF ]
 
 # Change defaults to match Anna
 DEFAULT_MIN_TEMP = 4
@@ -118,11 +113,11 @@ class ThermostatDevice(ClimateDevice):
         self._current_temperature = None
         self._outdoor_temperature = None
         self._state = None
-        self._hold_mode = None
+        self._preset_mode = None
         self._away_mode = False
         self._min_temp = min_temp
         self._max_temp = max_temp
-        self._operation_list = DEFAULT_OPERATION_LIST
+        self._hvac_modes = ATTR_HVAC_MODES
 
         _LOGGER.debug("Anna: Initializing API")
         import haanna
@@ -152,34 +147,34 @@ class ThermostatDevice(ClimateDevice):
         self._current_temperature = self._api.get_temperature(domain_objects)
         self._outdoor_temperature = self._api.get_outdoor_temperature(domain_objects)
         self._temperature = self._api.get_target_temperature(domain_objects)
-        self._hold_mode = self._api.get_current_preset(domain_objects)
+        self._preset_mode = self._api.get_current_preset(domain_objects)
         if self._api.get_mode(domain_objects) == True:
-          self._operation_mode=STATE_AUTO
+          self._hvac_mode=HVAC_MODE_AUTO
         else:
-          self._operation_mode=STATE_IDLE
+          self._hvac_mode=HVAC_MODE_OFF
         if self._api.get_heating_status(domain_objects) == True:
-          self._state=STATE_ON
+          self._state=HVAC_MODE_HEAT
         else:
-          self._state=STATE_OFF
+          self._state=HVAC_MODE_OFF
 
     @property
     def name(self):
         return self._name
 
     @property
-    def current_hold_mode(self):
-        """Return the current hold mode, e.g., home, away, temp."""
-        return self._hold_mode
+    def current_preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp."""
+        return self._preset_mode
 
     @property
-    def operation_list(self):
+    def hvac_modes(self):
         """Return the operation modes list."""
-        return self._operation_list
+        return self._hvac_modes
 
     @property
-    def current_operation(self):
+    def hvac_mode(self):
         """Return current operation ie. auto, idle."""
-        return self._operation_mode
+        return self._hvac_mode
 
     @property
     def icon(self):
@@ -228,14 +223,14 @@ class ThermostatDevice(ClimateDevice):
         else:
             _LOGGER.error('Anna: Failed to change temperature (invalid temperature given)')
 
-    def set_hold_mode(self, hold_mode):
-        """Set the hold mode."""
-        _LOGGER.debug("Anna: Adjusting hold_mode (i.e. preset)")
-        if hold_mode is not None and hold_mode in HOLD_MODES:
+    def set_preset_mode(self, preset_mode):
+        """Set the preset mode."""
+        _LOGGER.debug("Anna: Adjusting preset_mode (i.e. preset)")
+        if preset_mode is not None and preset_mode in PRESET_MODES:
             domain_objects = self._api.get_domain_objects()
-            self._hold_mode = hold_mode
-            self._api.set_preset(domain_objects, hold_mode)
-            _LOGGER.debug('Anna: Changing hold mode/preset')
+            self._preset_mode = preset_mode
+            self._api.set_preset(domain_objects, preset_mode)
+            _LOGGER.debug('Anna: Changing preset mode/preset')
         else:
-            _LOGGER.error('Anna: Failed to change hold mode (invalid or no preset given)')
+            _LOGGER.error('Anna: Failed to change preset mode (invalid or no preset given)')
 
