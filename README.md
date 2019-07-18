@@ -4,7 +4,8 @@ Currently supports:
 - Reading current temperature
 - Reading target temperature
 - Setting target temperature
-- Changing hold_mode (i.e. preset)
+- Changing preset_mode 
+Todo:
 - Getting scheduled state (and schedules)
 
 ## Installation
@@ -14,9 +15,9 @@ Currently supports:
 
 ## Usage
 
-Anna should be visible as `climate.anna...` in `dev-state` (the `<>` icon in Home Assistant)
+Anna should be visible as `climate.anna...` in `developer tools` -> `states` 
 
-You can change `hold_mode` using the HASS service call `climate.set_hold_mode` (see below) - changing it using the GUI is under investigation (how to properly do it)
+You can change `preset_mode` using the HASS service call `climate.set_preset_mode` (see below)
 
 You can change the requested temperature using the GUI or HASS service call `climate.set_temperature` (again see below)
 
@@ -80,13 +81,15 @@ This is done using HASS service `climate.set_temperature` with service data like
 
 ### Changing hold mode
 
-This is done using HASS service `climate.set_hold_mode` with service data like:
+This is done using HASS service `climate.set_preset_mode` with service data like:
 
 ```json
 {
-  "entity_id": "climate.anna_thermostaat","hold_mode":"away"
+  "entity_id": "climate.anna_thermostaat","preset_mode":"away"
 }
 ```
+
+Available options include: "home", "vacation", "no_frost", "asleep" & "away"
 
 ## Errors
 
