@@ -30,7 +30,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_OFF,
     SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE)
+    SERVICE_SET_TEMPERATURE,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE)
 
 from homeassistant.const import (
     CONF_NAME, 
@@ -45,7 +47,7 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.exceptions import PlatformNotReady
 
-SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE )
+SUPPORT_FLAGS = ( SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +68,7 @@ PRESET_MODE_NO_FROST = "no_frost"
 PRESET_MODE_SLEEP = "asleep"
 PRESET_MODE_AWAY = "away"
 
-PRESET_MODES = [ PRESET_MODE_HOME, PRESET_MODE_VACATION, PRESET_MODE_NO_FROST, PRESET_MODE_SLEEP, PRESET_MODE_AWAY ]
+ATTR_PRESET_MODES = [ PRESET_MODE_HOME, PRESET_MODE_VACATION, PRESET_MODE_NO_FROST, PRESET_MODE_SLEEP, PRESET_MODE_AWAY ]
 ATTR_HVAC_MODES = [ HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF ]
 
 # Change defaults to match Anna
@@ -140,6 +142,31 @@ class ThermostatDevice(ClimateDevice):
         """Return the current state"""
         return self._state
 
+    @property
+    def hvac_action(self):
+        """Return current running hvac"""
+        domain_objects = self._api.get_domain_objects()
+        #if self._api.get_mode(domain_objects) == True:
+        #  self._hvac_mode=CURRENT_HVAC_IDLE
+        #else:
+        #  self._hvac_mode=CURRENT_HVAC_OFF
+        if self._api.get_heating_status(domain_objects) == True:
+          self._state=CURRENT_HVAC_HEAT
+          return self._state
+        else:
+          self._state=CURRENT_HVAC_IDLE
+          return self._state
+
+    @property
+    def preset_mode(self):
+        """Polling is needed"""
+        return self._preset_mode
+
+    @property
+    def preset_modes(self):
+        """Polling is needed"""
+        return ATTR_PRESET_MODES
+
     def update(self):
         """Update the data from the thermostat"""
         _LOGGER.debug("Anna: Update called")
@@ -148,14 +175,14 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = self._api.get_outdoor_temperature(domain_objects)
         self._temperature = self._api.get_target_temperature(domain_objects)
         self._preset_mode = self._api.get_current_preset(domain_objects)
-        if self._api.get_mode(domain_objects) == True:
-          self._hvac_mode=HVAC_MODE_AUTO
-        else:
-          self._hvac_mode=HVAC_MODE_OFF
-        if self._api.get_heating_status(domain_objects) == True:
-          self._state=HVAC_MODE_HEAT
-        else:
-          self._state=HVAC_MODE_OFF
+        #if self._api.get_mode(domain_objects) == True:
+        #  self._hvac_mode=HVAC_MODE_AUTO
+        #else:
+        #  self._hvac_mode=HVAC_MODE_OFF
+        #if self._api.get_heating_status(domain_objects) == True:
+        #  self._state=HVAC_MODE_HEAT
+        #else:
+        #  self._state=HVAC_MODE_OFF
 
     @property
     def name(self):
@@ -165,6 +192,16 @@ class ThermostatDevice(ClimateDevice):
     def current_preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
         return self._preset_mode
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp."""
+        return self._preset_mode
+
+    @property
+    def preset_modes(self):
+        """Return the vailable preset modes, e.g., home, away, temp."""
+        return ATTR_PRESET_MODES
 
     @property
     def hvac_modes(self):
@@ -226,7 +263,7 @@ class ThermostatDevice(ClimateDevice):
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
         _LOGGER.debug("Anna: Adjusting preset_mode (i.e. preset)")
-        if preset_mode is not None and preset_mode in PRESET_MODES:
+        if preset_mode is not None and preset_mode in ATTR_PRESET_MODES:
             domain_objects = self._api.get_domain_objects()
             self._preset_mode = preset_mode
             self._api.set_preset(domain_objects, preset_mode)

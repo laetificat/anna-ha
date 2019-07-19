@@ -1,11 +1,15 @@
 # Anna component for Home Assistant
 A custom component to monitor the Plugwise Anna thermostat in Home Assistant.  
+
 Currently supports:
+
 - Reading current temperature
 - Reading target temperature
 - Setting target temperature
 - Changing preset_mode 
+
 Todo:
+
 - Getting scheduled state (and schedules)
 - Making 'changing HVAC mode' work (changing HEAT to AUTO or likewise using the GUI generates an error ... it does show if Anna is heating though ;))
 
