@@ -26,7 +26,6 @@ from homeassistant.components.climate.const import (CURRENT_HVAC_HEAT,
                                                     CURRENT_HVAC_IDLE, DOMAIN,
                                                     HVAC_MODE_AUTO,
                                                     HVAC_MODE_HEAT,
-                                                    HVAC_MODE_OFF,
                                                     SERVICE_SET_PRESET_MODE,
                                                     SERVICE_SET_TEMPERATURE,
                                                     SUPPORT_PRESET_MODE,
@@ -59,7 +58,7 @@ PRESET_MODE_AWAY = 'away'
 
 ATTR_PRESET_MODES = [PRESET_MODE_HOME, PRESET_MODE_VACATION,
                      PRESET_MODE_NO_FROST, PRESET_MODE_SLEEP, PRESET_MODE_AWAY]
-ATTR_HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+ATTR_HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 
 # Change defaults to match Anna
 DEFAULT_MIN_TEMP = 4
@@ -108,7 +107,6 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = None
         self._state = None
         self._preset_mode = None
-        self._away_mode = False
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._hvac_modes = ATTR_HVAC_MODES
