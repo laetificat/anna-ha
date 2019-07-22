@@ -14,6 +14,7 @@ Currently supports:
 Todo:
 
 - Adam/Lisa integration
+- Ensure async so when timing skews, HA doesn't mention the 'google'-like link mentioned in https://github.com/laetificat/anna-ha/issues/16
 
 **NOTICE**
 
