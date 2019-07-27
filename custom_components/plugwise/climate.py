@@ -263,8 +263,8 @@ class ThermostatDevice(ClimateDevice):
         """Set new target temperature."""
         _LOGGER.debug("Adjusting temperature")
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if (temperature is not None and temperature > CONF_MIN_TEMP and
-                temperature < CONF_MAX_TEMP):
+        if (temperature is not None and temperature > self._min_temp and
+                temperature < self._max_temp):
             self._temperature = temperature
             domain_objects = self._api.get_domain_objects()
             self._api.set_temperature(domain_objects, temperature)
