@@ -1,1 +1,0 @@
-"""Plugwise Anna component for HomeAssistant"""

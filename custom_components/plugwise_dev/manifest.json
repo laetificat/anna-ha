@@ -1,6 +1,6 @@
 {
-  "domain": "anna",
-  "name": "Plugwise Anna",
+  "domain": "plugwise_dev",
+  "name": "Plugwise Development Anna",
   "documentation": "https://github.com/laetificat/anna-ha",
   "dependencies": [],
   "codeowners": ["@laetificat","CoMPaTech"],
