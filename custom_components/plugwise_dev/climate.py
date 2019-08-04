@@ -11,7 +11,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
-    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -44,7 +44,7 @@ DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
 # HVAC modes
-ATTR_HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_OFF]
+ATTR_HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
 # Read platform configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -94,7 +94,9 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = None
         self._active_schema = None
         self._preset_mode = None
+        self._hvac_mode = None
         self._hvac_modes = ATTR_HVAC_MODES
+        self._manual_temp_change = "false"
 
     @property
     def hvac_action(self):
@@ -142,13 +144,21 @@ class ThermostatDevice(ClimateDevice):
     def hvac_mode(self):
         """Return current active hvac state."""
         if self._api.get_schema_state(self._domain_objects):
+            self._hvac_mode = HVAC_MODE_AUTO
             return HVAC_MODE_AUTO
-        return HVAC_MODE_OFF
+        self._hvac_mode = HVAC_MODE_HEAT
+        return HVAC_MODE_HEAT
 
     @property
     def preset_mode(self):
         """Return the active preset mode."""
-        return self._api.get_current_preset(self._domain_objects)
+        if self._manual_temp_change == "true":
+            self._manual_temp_change = "false"
+            return "Temporary"
+        elif self._hvac_mode == HVAC_MODE_AUTO:
+            return self._active_schema
+        else:
+            return self._api.get_current_preset(self._domain_objects)
 
     @property
     def preset_modes(self):
@@ -193,6 +203,7 @@ class ThermostatDevice(ClimateDevice):
         if temperature is not None and self._min_temp < temperature < self._max_temp:
             _LOGGER.debug("Changing temporary temperature")
             self._api.set_temperature(self._domain_objects, temperature)
+            self._manual_temp_change = "true"
         else:
             _LOGGER.error("Invalid temperature requested")
 
