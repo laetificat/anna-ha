@@ -92,7 +92,7 @@ class ThermostatDevice(ClimateDevice):
         self._name = name
         self._domain_objects = None
         self._outdoor_temperature = None
-        self._active_schema = None
+        self._selected_schema = None
         self._preset_mode = None
         self._hvac_mode = None
         self._hvac_modes = ATTR_HVAC_MODES
@@ -129,7 +129,7 @@ class ThermostatDevice(ClimateDevice):
         attributes["available_schemas"] = self._api.get_schema_names(
             self._domain_objects
         )
-        attributes["active_schema"] = self._active_schema
+        attributes["selected_schema"] = self._selected_schema
         return attributes
 
     def update(self):
@@ -139,29 +139,33 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
         )
-        self._active_schema = self._api.get_active_schema_name(self._domain_objects)
+        self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
 
     @property
     def hvac_mode(self):
         """Return current active hvac state."""
         if self._api.get_schema_state(self._domain_objects):
             self._schedule_override = False
+            #self._hvac_mode = HVAC_MODE_AUTO
             return HVAC_MODE_AUTO
+        #self._hvac_mode = HVAC_MODE_HEAT
         self._schedule_override = True
         return HVAC_MODE_HEAT
 
     @property
     def preset_mode(self):
         """Return the active preset mode."""
-        preset = self._preset_mode
-        if self.hvac_mode == HVAC_MODE_AUTO:
-          return "{}".format(self._active_schema)
-        return preset
+        preset_mode = self._api.get_current_preset(self._domain_objects) 
+        #if self.hvac_mode == HVAC_MODE_AUTO:
+        #  self._preset_mode = None
+        #  return "{}".format(self._selected_schema)
+        self._preset_mode = preset_mode
+        return self._preset_mode
         #if self._manual_temp_change == "true":
         #    self._manual_temp_change = "false"
         #    return "Tijdelijk"
         #elif self._hvac_mode == HVAC_MODE_AUTO:
-        #    return self._active_schema
+        #    return self._selected_schema
         #else:
         #    return self._api.get_current_preset(self._domain_objects)
 
@@ -220,11 +224,10 @@ class ThermostatDevice(ClimateDevice):
         if hvac_mode == HVAC_MODE_AUTO:
             schema_mode = "true"
         self._api.set_schema_state(
-            self._domain_objects, self._active_schema, schema_mode
+            self._domain_objects, self._selected_schema, schema_mode
         )
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
         _LOGGER.debug("Changing preset mode")
-        self._preset_mode = preset_mode
         self._api.set_preset(self._domain_objects, preset_mode)
