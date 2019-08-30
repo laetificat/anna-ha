@@ -43,6 +43,9 @@ DEFAULT_ICON = "mdi:thermometer"
 DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
+# New CURRENT_HVAC mode
+CURRENT_HVAC_DHW = "dhw"
+
 # HVAC modes
 ATTR_HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
@@ -104,7 +107,10 @@ class ThermostatDevice(ClimateDevice):
         """Return the current action."""
         if self._api.get_heating_status(self._domain_objects):
             return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+        elif self._api.get_domestic_hot_water_status(self._domain_objects):
+            return CURRENT_HVAC_DHW
+        else:
+            return CURRENT_HVAC_IDLE
 
     @property
     def name(self):
@@ -146,9 +152,7 @@ class ThermostatDevice(ClimateDevice):
         """Return current active hvac state."""
         if self._api.get_schema_state(self._domain_objects):
             self._schedule_override = False
-            #self._hvac_mode = HVAC_MODE_AUTO
             return HVAC_MODE_AUTO
-        #self._hvac_mode = HVAC_MODE_HEAT
         self._schedule_override = True
         return HVAC_MODE_HEAT
 
