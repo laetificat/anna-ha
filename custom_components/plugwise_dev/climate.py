@@ -101,7 +101,6 @@ class ThermostatDevice(ClimateDevice):
         self._hvac_modes = ATTR_HVAC_MODES
         self._preset_temperature = min_temp
         self._manual_temp_change = "false"
- #       self._schedule_override = False
 
     @property
     def hvac_action(self):
@@ -165,16 +164,12 @@ class ThermostatDevice(ClimateDevice):
     def hvac_mode(self):
         """Return current active hvac state."""
         if self._api.get_schema_state(self._domain_objects) and (self._api.get_current_preset(self._domain_objects) != 'on'):
-#            self._schedule_override = False
             return HVAC_MODE_AUTO
         elif self._api.get_schema_state(self._domain_objects) and (self._api.get_current_preset(self._domain_objects) == 'on'):
-#            self._schedule_override = True
             return HVAC_MODE_AUTO
         elif not self._api.get_schema_state(self._domain_objects) and (self._api.get_current_preset(self._domain_objects) == 'on'):
-#            self._schedule_override = False
             return HVAC_MODE_HEAT
         else:
-#            self._schedule_override = True
             return HVAC_MODE_HEAT
 
     @property
