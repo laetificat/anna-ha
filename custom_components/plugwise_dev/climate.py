@@ -105,7 +105,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_action(self):
         """Return the current action."""
-        if self._api.get_heating_status(self._domain_objects):
+        if self._api.get_heating_status(self._domain_objects) and not self._api.get_domestic_hot_water_status(self._domain_objects):
             return CURRENT_HVAC_HEAT
         elif self._api.get_domestic_hot_water_status(self._domain_objects):
             return CURRENT_HVAC_DHW
