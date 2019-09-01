@@ -165,7 +165,7 @@ class ThermostatDevice(ClimateDevice):
         if (self.hvac_mode == HVAC_MODE_AUTO) and (preset_mode == 'none') and (self._manual_temp_change == "false"):
             return "{}".format(self._selected_schema)
         elif (preset_mode != 'none'):
-            self._preset_temperature = self.current_temperature
+            self._preset_temperature = self.room_temperature
             return preset_mode
         elif (self.hvac_mode == HVAC_MODE_AUTO) and (self._manual_temp_change == "true"):
             return "Temporary"
@@ -186,7 +186,7 @@ class ThermostatDevice(ClimateDevice):
     def room_temperature(self):
         """Return the current temperature of the room."""
         return self._api.get_room_temperature(self._domain_objects)
-        if (self._preset_temperature != self.current_temperature):
+        if (self._preset_temperature != self.room_temperature):
             self._manual_temp_change = "false"
 
     @property
