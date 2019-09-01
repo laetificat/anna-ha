@@ -148,6 +148,16 @@ class ThermostatDevice(ClimateDevice):
         self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
 
     @property
+    def preset_modes(self):
+        """Return the available preset modes list and store the values."""
+        presets = self._api.get_presets(self._domain_objects)
+        presets_list = list(presets)
+        temps=[]
+        for key,val in presets.items():
+            temps.append(val)
+        return presets_list
+
+    @property
     def preset_mode(self):
         """Return the active schema when active, or the active preset mode or show a temporary temperature-change."""
         preset_mode = self._api.get_current_preset(self._domain_objects)
@@ -173,17 +183,11 @@ class ThermostatDevice(ClimateDevice):
             return HVAC_MODE_HEAT
 
     @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._api.get_temperature(self._domain_objects)
+    def room_temperature(self):
+        """Return the current temperature of the room."""
+        return self._api.get_room_temperature(self._domain_objects)
         if (self._preset_temperature != self.current_temperature):
             self._manual_temp_change = "false"
-
-    @property
-    def preset_modes(self):
-        """Return the available preset modes list without values."""
-        presets = list(self._api.get_presets(self._domain_objects))
-        return presets
 
     @property
     def hvac_modes(self):
@@ -202,8 +206,17 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def target_temperature(self):
-        """Return the target temperature."""
+        """Return the active target temperature."""
         return self._api.get_target_temperature(self._domain_objects)
+
+    @property
+    def thermostat_temperature(self):
+        """
+        Return the thermostat set temperature. This setting directly follows the changes
+        in temperature from the interface or schedule. After a small delay, the target_temperature
+        value will change as well, this is some kind of filter-function.
+        """
+        return self._api.get_thermostat_temperature(self._domain_objects)
 
     @property
     def temperature_unit(self):
