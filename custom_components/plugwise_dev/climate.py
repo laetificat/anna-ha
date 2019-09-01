@@ -149,12 +149,9 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def preset_modes(self):
-        """Return the available preset modes list and store the values."""
-        presets = self._api.get_presets(self._domain_objects)
-        presets_list = list(presets)
-        temps=[]
-        for key,val in presets.items():
-            temps.append(val)
+        """Return the available preset modes list and make the presets with their temperatures available."""
+        self._presets = self._api.get_presets(self._domain_objects)
+        presets_list = list(self._presets)
         return presets_list
 
     @property
@@ -162,7 +159,10 @@ class ThermostatDevice(ClimateDevice):
         """Return the active schema when active, or the active preset mode or show a temporary temperature-change."""
         preset_mode = self._api.get_current_preset(self._domain_objects)
         self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
-        if (self.hvac_mode == HVAC_MODE_AUTO) and (preset_mode == 'none') and (self._manual_temp_change == "false"):
+        schedule_temperature = self._api.get_schedule_temperature(self._domain_objects)
+        presets = self._api.get_presets(self._domain_objects)
+        preset_temp = presets.get(preset_mode, "none")
+        if (self.hvac_mode == HVAC_MODE_AUTO) and ((preset_mode == 'none') or (schedule_temperature == preset_temp)) and (self._manual_temp_change == "false"):
             return "{}".format(self._selected_schema)
         elif (preset_mode != 'none'):
             self._preset_temperature = self.current_temperature
