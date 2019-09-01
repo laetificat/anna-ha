@@ -193,12 +193,8 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current active hvac state."""
-        if self._api.get_schema_state(self._domain_objects) and (self._api.get_current_preset(self._domain_objects) != 'on'):
+        if self._api.get_schema_state(self._domain_objects):
             return HVAC_MODE_AUTO
-        elif self._api.get_schema_state(self._domain_objects) and (self._api.get_current_preset(self._domain_objects) == 'on'):
-            return HVAC_MODE_AUTO
-        elif not self._api.get_schema_state(self._domain_objects) and (self._api.get_current_preset(self._domain_objects) == 'on'):
-            return HVAC_MODE_HEAT
         else:
             return HVAC_MODE_HEAT
 
