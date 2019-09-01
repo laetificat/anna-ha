@@ -180,8 +180,12 @@ class ThermostatDevice(ClimateDevice):
         schedule_temperature = self._api.get_schedule_temperature(self._domain_objects)
         presets = self._api.get_presets(self._domain_objects)
         preset_temp = presets.get(preset_mode, "none")
-        if (self.hvac_mode == HVAC_MODE_AUTO) and (preset_mode == self._preset_mode) and (schedule_temperature != self.thermostat_temperature):
+        """ Manual_temp_change detection: """
+        if (self.hvac_mode == HVAC_MODE_AUTO) and (schedule_temperature != self.thermostat_temperature):
             self._manual_temp_change = "true"
+        """ Reset the manual_temp_change detection when a schedule-change happens and the schedule takes control again: """
+        if (self.hvac_mode == HVAC_MODE_AUTO) and (schedule_temperature == self.thermostat_temperature):
+            self._manual_temp_change = "false"
         if (self.hvac_mode == HVAC_MODE_AUTO) and ((preset_mode == 'none') or (schedule_temperature == preset_temp)) and (self._manual_temp_change == "false"):
             return "{}".format(self._selected_schema)
         elif (preset_mode != 'none'):
