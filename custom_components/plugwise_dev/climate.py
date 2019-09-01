@@ -155,6 +155,24 @@ class ThermostatDevice(ClimateDevice):
         return presets_list
 
     @property
+    def thermostat_temperature(self):
+        """
+        Return the thermostat set temperature. This setting directly follows the changes
+        in temperature from the interface or schedule. After a small delay, the target_temperature
+        value will change as well, this is some kind of filter-function.
+        """
+        return self._api.get_thermostat_temperature(self._domain_objects)
+
+    @property
+    def target_temperature(self):
+        """
+        Returns the active target temperature.
+        From the XML the thermostat-value is used because it updates 'immediately' compared to the target_temperature-value.
+        """
+#        return self._api.get_target_temperature(self._domain_objects)
+        return self.thermostat_temperature
+
+    @property
     def preset_mode(self):
         """Return the active schema when active, or the active preset mode or show a temporary temperature-change."""
         preset_mode = self._api.get_current_preset(self._domain_objects)
@@ -162,6 +180,8 @@ class ThermostatDevice(ClimateDevice):
         schedule_temperature = self._api.get_schedule_temperature(self._domain_objects)
         presets = self._api.get_presets(self._domain_objects)
         preset_temp = presets.get(preset_mode, "none")
+        if (self.hvac_mode == HVAC_MODE_AUTO) and (preset_mode == self._preset_mode) and (schedule_temperature != self.thermostat_temperature):
+            self._manual_temp_change = "true"
         if (self.hvac_mode == HVAC_MODE_AUTO) and ((preset_mode == 'none') or (schedule_temperature == preset_temp)) and (self._manual_temp_change == "false"):
             return "{}".format(self._selected_schema)
         elif (preset_mode != 'none'):
@@ -186,8 +206,6 @@ class ThermostatDevice(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature of the room."""
         return self._api.get_room_temperature(self._domain_objects)
-        if (self._preset_temperature != self.current_temperature):
-            self._manual_temp_change = "false"
 
     @property
     def hvac_modes(self):
@@ -205,20 +223,6 @@ class ThermostatDevice(ClimateDevice):
         return self._max_temp
 
     @property
-    def target_temperature(self):
-        """Return the active target temperature."""
-        return self._api.get_target_temperature(self._domain_objects)
-
-    @property
-    def thermostat_temperature(self):
-        """
-        Return the thermostat set temperature. This setting directly follows the changes
-        in temperature from the interface or schedule. After a small delay, the target_temperature
-        value will change as well, this is some kind of filter-function.
-        """
-        return self._api.get_thermostat_temperature(self._domain_objects)
-
-    @property
     def temperature_unit(self):
         """Return the unit of measured temperature."""
         return TEMP_CELSIUS
@@ -230,7 +234,6 @@ class ThermostatDevice(ClimateDevice):
         if temperature is not None and self._min_temp < temperature < self._max_temp:
             _LOGGER.debug("Changing temporary temperature")
             self._api.set_temperature(self._domain_objects, temperature)
-            self._manual_temp_change = "true"
         else:
             _LOGGER.error("Invalid temperature requested")
 
@@ -251,4 +254,3 @@ class ThermostatDevice(ClimateDevice):
         _LOGGER.debug("Changing preset mode")
         self._api.set_preset(self._domain_objects, preset_mode)
         self._preset_mode = preset_mode
-        self._manual_temp_change = "false"
