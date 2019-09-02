@@ -97,7 +97,6 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = None
         self._selected_schema = None
         self._preset_mode = "none"
-        self._prev_preset_mode = "none"
         self._hvac_mode = None
         self._hvac_modes = ATTR_HVAC_MODES
         self._tmp_preset_set = "false"
@@ -176,9 +175,6 @@ class ThermostatDevice(ClimateDevice):
         Returns the active target temperature.
         From the XML the thermostat-value is used because it updates 'immediately' compared to the target_temperature-value.
         """
-        if (self.preset_mode is not None): 
-            self._prev_preset_mode = self.preset_mode
-#	""" save the previous preset_mode """
 #        return self._api.get_target_temperature(self._domain_objects)
         return self.thermostat_temperature
 
@@ -188,16 +184,17 @@ class ThermostatDevice(ClimateDevice):
         Return the active selected schedule-name, or the (temporary) active preset 
         or Temporary in case of a manual change in the set-temperature.
         """
-        preset_mode = self._api.get_current_preset(self._domain_objects)
+        self._preset_mode = self._api.get_current_preset(self._domain_objects)
         schedule_temperature = self._api.get_schedule_temperature(self._domain_objects)
         presets = self._api.get_presets(self._domain_objects)
-        preset_temperature = presets.get(preset_mode, "none")
+        preset_temperature = presets.get(self._preset_mode, "none")
         if (self.hvac_mode == HVAC_MODE_AUTO) and (self.thermostat_temperature == schedule_temperature):
             return "{}".format(self._selected_schema)
-        elif (self.hvac_mode == HVAC_MODE_AUTO) and (self._prev_preset_mode != preset_mode):
-            self._tmp_preset_set = "true"
-            return preset_mode
-        elif (self.hvac_mode == HVAC_MODE_AUTO) and ((self.thermostat_temperature != schedule_temperature) and (self._prev_preset_mode == preset_mode)) or ((self._tmp_preset_set == "true") and (self.thermostat_temperature != preset_temperature)):
+        elif (self.thermostat_temperature != schedule_temperature) and (self.thermostat_temperature == preset_temperature):
+            if (self.hvac_mode == HVAC_MODE_AUTO):
+                self._tmp_preset_set = "true"
+            return self._preset_mode
+        elif (self.hvac_mode == HVAC_MODE_AUTO) and ((self.thermostat_temperature != schedule_temperature) or ((self._tmp_preset_set == "true") and (self.thermostat_temperature != preset_temperature))):
             return "Temporary"
         
     @property
@@ -238,7 +235,7 @@ class ThermostatDevice(ClimateDevice):
     def set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
         _LOGGER.debug("Adjusting hvac_mode (i.e. schedule/schema)")
-        self._preset_mode = "none"
+#        self._preset_mode = "none"
         self._manual_temp_change = "false"
         schema_mode = "false"
         if hvac_mode == HVAC_MODE_AUTO:
@@ -251,4 +248,4 @@ class ThermostatDevice(ClimateDevice):
         """Set the preset mode."""
         _LOGGER.debug("Changing preset mode")
         self._api.set_preset(self._domain_objects, preset_mode)
-        self._preset_mode = preset_mode
+#        self._preset_mode = preset_mode
