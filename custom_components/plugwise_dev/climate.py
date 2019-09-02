@@ -100,7 +100,7 @@ class ThermostatDevice(ClimateDevice):
         self._prev_preset_mode = "none"
         self._hvac_mode = None
         self._hvac_modes = ATTR_HVAC_MODES
-        self._tmp_preset_set = "false
+        self._tmp_preset_set = "false"
 
     @property
     def hvac_action(self):
@@ -177,7 +177,8 @@ class ThermostatDevice(ClimateDevice):
         From the XML the thermostat-value is used because it updates 'immediately' compared to the target_temperature-value.
         """
         if (self.preset_mode is not None): 
-            self._prev_preset_mode = self.preset_mode """save the previous preset_mode """
+            self._prev_preset_mode = self.preset_mode
+#	""" save the previous preset_mode """
 #        return self._api.get_target_temperature(self._domain_objects)
         return self.thermostat_temperature
 
@@ -191,15 +192,13 @@ class ThermostatDevice(ClimateDevice):
         schedule_temperature = self._api.get_schedule_temperature(self._domain_objects)
         presets = self._api.get_presets(self._domain_objects)
         preset_temperature = presets.get(preset_mode, "none")
-        if (self.hvac_mode == HVAC_MODE_AUTO) and (self.thermostat_temperature == schedule_temperature)):
+        if (self.hvac_mode == HVAC_MODE_AUTO) and (self.thermostat_temperature == schedule_temperature):
             return "{}".format(self._selected_schema)
         elif (self.hvac_mode == HVAC_MODE_AUTO) and (self._prev_preset_mode != preset_mode):
             self._tmp_preset_set = "true"
             return preset_mode
-        elif (self.hvac_mode == HVAC_MODE_AUTO) and 
-                    ((self.thermostat_temperature != schedule_temperature) and (self._prev_preset_mode == preset_mode)) or
-                    ((self._tmp_preset_set = "true") and (self.thermostat_temperature != preset_temperature)):
-            return "Temporary"        
+        elif (self.hvac_mode == HVAC_MODE_AUTO) and ((self.thermostat_temperature != schedule_temperature) and (self._prev_preset_mode == preset_mode)) or ((self._tmp_preset_set == "true") and (self.thermostat_temperature != preset_temperature)):
+            return "Temporary"
         
     @property
     def current_temperature(self):
