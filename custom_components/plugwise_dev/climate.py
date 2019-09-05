@@ -199,8 +199,8 @@ class ThermostatDevice(ClimateDevice):
         
     @property
     def current_temperature(self):
-        """Return the current temperature of the room."""
-        return self._api.get_room_temperature(self._domain_objects)
+        """Return the current room temperature."""
+        return self._api.get_current_temperature(self._domain_objects)
 
     @property
     def hvac_modes(self):
