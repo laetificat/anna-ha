@@ -116,9 +116,10 @@ class ThermostatDevice(ClimateDevice):
         self._cooling_status = self._api.get_cooling_status(self._domain_objects)
         self._dhw_status = self._api.get_domestic_hot_water_status(self._domain_objects)
         if self._heating_status:
-            return CURRENT_HVAC_HEAT
-        elif self._cooling_status:
-            return CURRENT_HVAC_COOL
+            if self._cooling_status:
+                return CURRENT_HVAC_COOL
+            else: 
+                return CURRENT_HVAC_HEAT
         elif self._dhw_status:
             return CURRENT_HVAC_DHW
         else:
