@@ -67,7 +67,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add the Plugwise (Anna) Thermostate."""
     api = haanna.Haanna(
@@ -102,20 +101,25 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = None
         self._selected_schema = None
         self._preset_mode = "none"
-        self._heating_status = False
-        self._cooling_status = False
+        self._heating_status = None
+        self._cooling_status = None
+        self._dhw_status = None
         self._hvac_mode = None
+        self._hvac_modes_1 = ATTR_HVAC_MODES_1
+        self._hvac_modes_2 = ATTR_HVAC_MODES_2
+        self._hvac_modes_3 = ATTR_HVAC_MODES_3
 
     @property
     def hvac_action(self):
         """Return the current action."""
         self._heating_status = self._api.get_heating_status(self._domain_objects)
         self._cooling_status = self._api.get_cooling_status(self._domain_objects)
+        self._dhw_status = self._api.get_domestic_hot_water_status(self._domain_objects)
         if self._heating_status:
             return CURRENT_HVAC_HEAT
         elif self._cooling_status:
             return CURRENT_HVAC_COOL
-        elif self._api.get_domestic_hot_water_status(self._domain_objects):
+        elif self._dhw_status:
             return CURRENT_HVAC_DHW
         else:
             return CURRENT_HVAC_IDLE
@@ -164,13 +168,13 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the available hvac modes list."""
-        if self._heating_status:
-            if self._cooling_status:
-                return ATTR_HVAC_MODES_3
+        if self._heating_status is not None:
+            if self._cooling_status is not None:
+                return self._hvac_modes_3
             else:
-                return ATTR_HVAC_MODES_1
-        elif self._cooling_status:
-            return ATTR_HVAC_MODES_2
+                return self._hvac_modes_1
+        elif self._cooling_status is not None:
+            return self._hvac_modes_2
     
     @property
     def hvac_mode(self):
