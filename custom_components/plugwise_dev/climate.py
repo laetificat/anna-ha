@@ -100,7 +100,7 @@ class ThermostatDevice(ClimateDevice):
         self._domain_objects = None
         self._outdoor_temperature = None
         self._selected_schema = None
-        self._preset_mode = "none"
+        self._preset_mode = None
         self._heating_status = None
         self._cooling_status = None
         self._dhw_status = None
@@ -203,7 +203,6 @@ class ThermostatDevice(ClimateDevice):
         Returns the active target temperature.
         From the XML the thermostat-value is used because it updates 'immediately' compared to the target_temperature-value.
         """
-#        return self._api.get_target_temperature(self._domain_objects)
         return self.thermostat_temperature
 
     @property
@@ -261,8 +260,6 @@ class ThermostatDevice(ClimateDevice):
     def set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
         _LOGGER.debug("Adjusting hvac_mode (i.e. schedule/schema)")
-#        self._preset_mode = "none"
-        self._manual_temp_change = "false"
         schema_mode = "false"
         if hvac_mode == HVAC_MODE_AUTO:
             schema_mode = "true"
@@ -274,4 +271,3 @@ class ThermostatDevice(ClimateDevice):
         """Set the preset mode."""
         _LOGGER.debug("Changing preset mode")
         self._api.set_preset(self._domain_objects, preset_mode)
-#        self._preset_mode = preset_mode
