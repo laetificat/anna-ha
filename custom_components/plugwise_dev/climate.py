@@ -12,7 +12,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_AUTO,
     SUPPORT_PRESET_MODE,
@@ -51,8 +50,7 @@ CURRENT_HVAC_DHW = "dhw"
 
 # HVAC modes
 ATTR_HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
-ATTR_HVAC_MODES_2 = [HVAC_MODE_COOL, HVAC_MODE_AUTO]
-ATTR_HVAC_MODES_3 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
+ATTR_HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
 
 # Read platform configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -107,7 +105,6 @@ class ThermostatDevice(ClimateDevice):
         self._hvac_mode = None
         self._hvac_modes_1 = ATTR_HVAC_MODES_1
         self._hvac_modes_2 = ATTR_HVAC_MODES_2
-        self._hvac_modes_3 = ATTR_HVAC_MODES_3
 
     @property
     def hvac_action(self):
@@ -116,10 +113,9 @@ class ThermostatDevice(ClimateDevice):
         self._cooling_status = self._api.get_cooling_status(self._domain_objects)
         self._dhw_status = self._api.get_domestic_hot_water_status(self._domain_objects)
         if self._heating_status:
-            if self._cooling_status:
-                return CURRENT_HVAC_COOL
-            else: 
-                return CURRENT_HVAC_HEAT
+            return CURRENT_HVAC_HEAT
+        elif self._cooling_status:
+            return CURRENT_HVAC_COOL
         elif self._dhw_status:
             return CURRENT_HVAC_DHW
         else:
@@ -171,19 +167,17 @@ class ThermostatDevice(ClimateDevice):
         """Return the available hvac modes list."""
         if self._heating_status is not None:
             if self._cooling_status is not None:
-                return self._hvac_modes_3
+                return self._hvac_modes_2
             else:
                 return self._hvac_modes_1
-        elif self._cooling_status is not None:
-            return self._hvac_modes_2
     
     @property
     def hvac_mode(self):
         """Return current active hvac state."""
         if self._api.get_schema_state(self._domain_objects):
             return HVAC_MODE_AUTO
-        elif self._heating_status:
-            if self._cooling_status:
+        elif self._heating_status is not None:
+            if self._cooling_status is not None:
                 return HVAC_MODE_HEAT_COOL
             else:
                 return HVAC_MODE_HEAT
