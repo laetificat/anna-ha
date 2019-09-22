@@ -9,9 +9,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
     CURRENT_HVAC_IDLE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_AUTO,
-    HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -43,8 +45,12 @@ DEFAULT_ICON = "mdi:thermometer"
 DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
+# New CURRENT_HVAC mode
+CURRENT_HVAC_DHW = "dhw"
+
 # HVAC modes
-ATTR_HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_OFF]
+ATTR_HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
+ATTR_HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
 
 # Read platform configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -58,7 +64,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): cv.positive_int,
     }
 )
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add the Plugwise (Anna) Thermostate."""
@@ -92,16 +97,29 @@ class ThermostatDevice(ClimateDevice):
         self._name = name
         self._domain_objects = None
         self._outdoor_temperature = None
-        self._active_schema = None
+        self._selected_schema = None
         self._preset_mode = None
-        self._hvac_modes = ATTR_HVAC_MODES
+        self._heating_status = None
+        self._cooling_status = None
+        self._dhw_status = None
+        self._hvac_mode = None
+        self._hvac_modes_1 = ATTR_HVAC_MODES_1
+        self._hvac_modes_2 = ATTR_HVAC_MODES_2
 
     @property
     def hvac_action(self):
         """Return the current action."""
-        if self._api.get_heating_status(self._domain_objects):
+        self._heating_status = self._api.get_heating_status(self._domain_objects)
+        self._cooling_status = self._api.get_cooling_status(self._domain_objects)
+        self._dhw_status = self._api.get_domestic_hot_water_status(self._domain_objects)
+        if self._heating_status:
             return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+        elif self._cooling_status:
+            return CURRENT_HVAC_COOL
+        elif self._dhw_status:
+            return CURRENT_HVAC_DHW
+        else:
+            return CURRENT_HVAC_IDLE
 
     @property
     def name(self):
@@ -126,7 +144,7 @@ class ThermostatDevice(ClimateDevice):
         attributes["available_schemas"] = self._api.get_schema_names(
             self._domain_objects
         )
-        attributes["active_schema"] = self._active_schema
+        attributes["selected_schema"] = self._selected_schema
         return attributes
 
     def update(self):
@@ -136,35 +154,77 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
         )
-        self._active_schema = self._api.get_active_schema_name(self._domain_objects)
-
-    @property
-    def hvac_mode(self):
-        """Return current active hvac state."""
-        if self._api.get_schema_state(self._domain_objects):
-            return HVAC_MODE_AUTO
-        return HVAC_MODE_OFF
-
-    @property
-    def preset_mode(self):
-        """Return the active preset mode."""
-        return self._api.get_current_preset(self._domain_objects)
+        self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
 
     @property
     def preset_modes(self):
-        """Return the available preset modes list without values."""
+        """Return the available preset modes list and make the presets with their temperatures available."""
         presets = list(self._api.get_presets(self._domain_objects))
         return presets
 
     @property
     def hvac_modes(self):
-        """Return the available hvac  modes list."""
-        return self._hvac_modes
+        """Return the available hvac modes list."""
+        if self._heating_status is not None:
+            if self._cooling_status is not None:
+                return self._hvac_modes_2
+            else:
+                return self._hvac_modes_1
+    
+    @property
+    def hvac_mode(self):
+        """Return current active hvac state."""
+        if self._api.get_schema_state(self._domain_objects):
+            return HVAC_MODE_AUTO
+        elif self._heating_status is not None:
+            if self._cooling_status is not None:
+                return HVAC_MODE_HEAT_COOL
+            else:
+                return HVAC_MODE_HEAT
 
     @property
+    def thermostat_temperature(self):
+        """
+        Return the thermostat set temperature. This setting directly follows the changes
+        in temperature from the interface or schedule. After a small delay, the target_temperature
+        value will change as well, this is some kind of filter-function.
+        """
+        return self._api.get_thermostat_temperature(self._domain_objects)
+
+    @property
+    def target_temperature(self):
+        """
+        Returns the active target temperature.
+        From the XML the thermostat-value is used because it updates 'immediately' compared to the target_temperature-value.
+        """
+        return self.thermostat_temperature
+
+    @property
+    def preset_mode(self):
+        """
+        Return the active selected schedule-name, or the (temporary) active preset 
+        or Temporary in case of a manual change in the set-temperature.
+        """
+        self._preset_mode = self._api.get_current_preset(self._domain_objects)
+        schedule_temperature = self._api.get_schedule_temperature(self._domain_objects)
+        presets = self._api.get_presets(self._domain_objects)
+        preset_temperature = presets.get(self._preset_mode, "none")
+        if (self.hvac_mode == HVAC_MODE_AUTO):
+            if (self.thermostat_temperature == schedule_temperature):
+                return "{}".format(self._selected_schema)
+            elif (self.thermostat_temperature == preset_temperature):
+                return self._preset_mode
+            else:
+                return "Temporary"
+        elif (self.thermostat_temperature != preset_temperature):
+            return "Temporary"
+        else:
+            return self._preset_mode        
+        
+    @property
     def current_temperature(self):
-        """Return the current temperature."""
-        return self._api.get_temperature(self._domain_objects)
+        """Return the current room temperature."""
+        return self._api.get_current_temperature(self._domain_objects)
 
     @property
     def min_temp(self):
@@ -175,11 +235,6 @@ class ThermostatDevice(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature possible to set."""
         return self._max_temp
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature."""
-        return self._api.get_target_temperature(self._domain_objects)
 
     @property
     def temperature_unit(self):
@@ -203,11 +258,10 @@ class ThermostatDevice(ClimateDevice):
         if hvac_mode == HVAC_MODE_AUTO:
             schema_mode = "true"
         self._api.set_schema_state(
-            self._domain_objects, self._active_schema, schema_mode
+            self._domain_objects, self._selected_schema, schema_mode
         )
 
     def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
         _LOGGER.debug("Changing preset mode")
-        self._preset_mode = preset_mode
         self._api.set_preset(self._domain_objects, preset_mode)
