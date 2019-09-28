@@ -6,7 +6,10 @@ import voluptuous as vol
 import haanna
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateDevice,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_COOL,
@@ -28,7 +31,9 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+SUPPORT_FLAGS = (
+    SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,23 +60,30 @@ ATTR_HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
 # Read platform configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(
+            CONF_NAME, default=DEFAULT_NAME
+        ): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): 
-            cv.string,
-        vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): 
-            cv.positive_int,
-        vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): 
-            cv.positive_int,
+        vol.Optional(
+            CONF_PORT, default=DEFAULT_PORT
+        ): cv.port,
+        vol.Optional(
+            CONF_USERNAME, default=DEFAULT_USERNAME
+        ): cv.string,
+        vol.Optional(
+            CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP
+        ): cv.positive_int,
     }
 )
 
 
 async def async_setup_platform(
-        hass, config, async_add_entities, 
-        discovery_info=None):
+    hass, config, async_add_entities, discovery_info=None
+):
     """Add the Plugwise (Anna) Thermostate."""
     api = haanna.Haanna(
         config[CONF_USERNAME],
@@ -82,14 +94,16 @@ async def async_setup_platform(
     try:
         api.ping_anna_thermostat()
     except OSError:
-        _LOGGER.debug("Ping failed, retrying later", exc_info=True)
+        _LOGGER.debug(
+            "Ping failed, retrying later", exc_info=True
+        )
         raise PlatformNotReady
     devices = [
         ThermostatDevice(
-            api, 
+            api,
             config[CONF_NAME],
             config[CONF_MIN_TEMP],
-            config[CONF_MAX_TEMP]
+            config[CONF_MAX_TEMP],
         )
     ]
     async_add_entities(devices)
@@ -125,18 +139,26 @@ class ThermostatDevice(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         _LOGGER.debug("Update called")
-        self._domain_objects = self._api.get_domain_objects()
+        self._domain_objects = (
+            self._api.get_domain_objects()
+        )
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
         )
         self._selected_schema = self._api.get_active_schema_name(
             self._domain_objects
         )
-        self._preset_mode = self._api.get_current_preset(self._domain_objects)
-        self._presets = self._api.get_presets(self._domain_objects)
-        self._presets_list = list(self._api.get_presets(self._domain_objects))
+        self._preset_mode = self._api.get_current_preset(
+            self._domain_objects
+        )
+        self._presets = self._api.get_presets(
+            self._domain_objects
+        )
+        self._presets_list = list(
+            self._api.get_presets(self._domain_objects)
+        )
         self._heating_status = self._api.get_heating_status(
-           self._domain_objects
+            self._domain_objects
         )
         self._cooling_status = self._api.get_cooling_status(
             self._domain_objects
@@ -144,8 +166,12 @@ class ThermostatDevice(ClimateDevice):
         self._dhw_status = self._api.get_domestic_hot_water_status(
             self._domain_objects
         )
-        self._schema_names = self._api.get_schema_names(self._domain_objects)
-        self._schema_status = self._api.get_schema_state(self._domain_objects)
+        self._schema_names = self._api.get_schema_names(
+            self._domain_objects
+        )
+        self._schema_status = self._api.get_schema_state(
+            self._domain_objects
+        )
         self._current_temperature = self._api.get_current_temperature(
             self._domain_objects
         )
@@ -187,9 +213,13 @@ class ThermostatDevice(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}
-        attributes["outdoor_temperature"] = self._outdoor_temperature
+        attributes[
+            "outdoor_temperature"
+        ] = self._outdoor_temperature
         attributes["available_schemas"] = self._schema_names
-        attributes["selected_schema"] = self._selected_schema
+        attributes[
+            "selected_schema"
+        ] = self._selected_schema
         return attributes
 
     @property
@@ -208,7 +238,7 @@ class ThermostatDevice(ClimateDevice):
                 return self._hvac_modes_2
             else:
                 return self._hvac_modes_1
-    
+
     @property
     def hvac_mode(self):
         """Return current active hvac state."""
@@ -249,20 +279,32 @@ class ThermostatDevice(ClimateDevice):
         """
         if self._presets is not None:
             presets = self._presets
-            preset_temperature = presets.get(self._preset_mode, "none")
-            if (self.hvac_mode == HVAC_MODE_AUTO):
-                if (self._thermostat_temperature 
-                        == self._schedule_temperature):
-                    return "{}".format(self._selected_schema)
-                elif (self._thermostat_temperature == preset_temperature):
+            preset_temperature = presets.get(
+                self._preset_mode, "none"
+            )
+            if self.hvac_mode == HVAC_MODE_AUTO:
+                if (
+                    self._thermostat_temperature
+                    == self._schedule_temperature
+                ):
+                    return "{}".format(
+                        self._selected_schema
+                    )
+                elif (
+                    self._thermostat_temperature
+                    == preset_temperature
+                ):
                     return self._preset_mode
                 else:
                     return "Temporary"
-            elif (self._thermostat_temperature != preset_temperature):
+            elif (
+                self._thermostat_temperature
+                != preset_temperature
+            ):
                 return "Temporary"
             else:
                 return self._preset_mode
-        
+
     @property
     def current_temperature(self):
         """Return the current room temperature."""
@@ -287,24 +329,36 @@ class ThermostatDevice(ClimateDevice):
         """Set new target temperature."""
         _LOGGER.debug("Adjusting temperature")
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None and self._min_temp < temperature
-                < self._max_temp:
+        if (
+            temperature is not None
+            and self._min_temp
+            < temperature
+            < self._max_temp
+        ):
             _LOGGER.debug("Changing temporary temperature")
-            self._api.set_temperature(self._domain_objects, temperature)
+            self._api.set_temperature(
+                self._domain_objects, temperature
+            )
         else:
             _LOGGER.error("Invalid temperature requested")
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
-        _LOGGER.debug("Adjusting hvac_mode (i.e. schedule/schema)")
+        _LOGGER.debug(
+            "Adjusting hvac_mode (i.e. schedule/schema)"
+        )
         schema_mode = "false"
         if hvac_mode == HVAC_MODE_AUTO:
             schema_mode = "true"
         self._api.set_schema_state(
-            self._domain_objects, self._selected_schema, schema_mode
+            self._domain_objects,
+            self._selected_schema,
+            schema_mode,
         )
 
     async def async_set_preset_mode(self, preset_mode):
         """Set the preset mode."""
         _LOGGER.debug("Changing preset mode")
-        self._api.set_preset(self._domain_objects, preset_mode)
+        self._api.set_preset(
+            self._domain_objects, preset_mode
+        )
