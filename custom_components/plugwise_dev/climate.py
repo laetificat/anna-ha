@@ -70,8 +70,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-    ):
+        hass, config, async_add_entities, 
+        discovery_info=None):
     """Add the Plugwise (Anna) Thermostate."""
     api = haanna.Haanna(
         config[CONF_USERNAME],
@@ -237,6 +237,8 @@ class ThermostatDevice(ClimateDevice):
         Returns the active target temperature.
         From the XML the thermostat-value is used because it updates
         'immediately' compared to the target_temperature-value.
+        This way the information on the card is "immediately" updated
+        after changing the preset, temperature, etc.
         """
         return self._thermostat_temperature
 
@@ -286,7 +288,7 @@ class ThermostatDevice(ClimateDevice):
         """Set new target temperature."""
         _LOGGER.debug("Adjusting temperature")
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None and self._min_temp < temperature \
+        if temperature is not None and self._min_temp < temperature
                 < self._max_temp:
             _LOGGER.debug("Changing temporary temperature")
             self._api.set_temperature(self._domain_objects, temperature)
