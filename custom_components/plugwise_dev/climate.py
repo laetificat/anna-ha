@@ -98,7 +98,6 @@ async def async_setup_platform(
 class ThermostatDevice(ClimateDevice):
     """Representation of an Plugwise thermostat."""
 
-
     def __init__(self, api, name, min_temp, max_temp):
         """Set up the Plugwise API."""
         self._api = api
