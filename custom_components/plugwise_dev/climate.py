@@ -251,8 +251,8 @@ class ThermostatDevice(ClimateDevice):
             presets = self._presets
             preset_temperature = presets.get(self._preset_mode, "none")
             if (self.hvac_mode == HVAC_MODE_AUTO):
-                if (self._thermostat_temperature == 
-                        self._schedule_temperature):
+                if (self._thermostat_temperature 
+                        == self._schedule_temperature):
                     return "{}".format(self._selected_schema)
                 elif (self._thermostat_temperature == preset_temperature):
                     return self._preset_mode
