@@ -106,7 +106,7 @@ async def async_setup_platform(
             config[CONF_MAX_TEMP],
         )
     ]
-    async_add_entities(devices)
+    async_add_entities(devices, True)
 
 
 class ThermostatDevice(ClimateDevice):
@@ -131,56 +131,13 @@ class ThermostatDevice(ClimateDevice):
         self._schema_status = None
         self._current_temperature = None
         self._thermostat_temperature = None
+        self._illuminance = None
+        self._boiler_temperature = None
+        self._water_pressure = None
         self._schedule_temperature = None
         self._hvac_mode = None
         self._hvac_modes_1 = ATTR_HVAC_MODES_1
         self._hvac_modes_2 = ATTR_HVAC_MODES_2
-
-    def update(self):
-        """Update the data from the thermostat."""
-        _LOGGER.debug("Update called")
-        self._domain_objects = (
-            self._api.get_domain_objects()
-        )
-        self._outdoor_temperature = self._api.get_outdoor_temperature(
-            self._domain_objects
-        )
-        self._selected_schema = self._api.get_active_schema_name(
-            self._domain_objects
-        )
-        self._preset_mode = self._api.get_current_preset(
-            self._domain_objects
-        )
-        self._presets = self._api.get_presets(
-            self._domain_objects
-        )
-        self._presets_list = list(
-            self._api.get_presets(self._domain_objects)
-        )
-        self._heating_status = self._api.get_heating_status(
-            self._domain_objects
-        )
-        self._cooling_status = self._api.get_cooling_status(
-            self._domain_objects
-        )
-        self._dhw_status = self._api.get_domestic_hot_water_status(
-            self._domain_objects
-        )
-        self._schema_names = self._api.get_schema_names(
-            self._domain_objects
-        )
-        self._schema_status = self._api.get_schema_state(
-            self._domain_objects
-        )
-        self._current_temperature = self._api.get_current_temperature(
-            self._domain_objects
-        )
-        self._thermostat_temperature = self._api.get_thermostat_temperature(
-            self._domain_objects
-        )
-        self._schedule_temperature = self._api.get_schedule_temperature(
-            self._domain_objects
-        )
 
     @property
     def hvac_action(self):
@@ -220,6 +177,9 @@ class ThermostatDevice(ClimateDevice):
         attributes[
             "selected_schema"
         ] = self._selected_schema
+        attributes["illuminance"] = self._illuminance
+        attributes["boiler_temperature"] = self._boiler_temperature
+        attributes["water_pressure"] = self._water_pressure
         return attributes
 
     @property
@@ -361,4 +321,59 @@ class ThermostatDevice(ClimateDevice):
         _LOGGER.debug("Changing preset mode")
         self._api.set_preset(
             self._domain_objects, preset_mode
+        )
+
+    def update(self):
+        """Update the data from the thermostat."""
+        _LOGGER.debug("Update called")
+        self._domain_objects = (
+            self._api.get_domain_objects()
+        )
+        self._outdoor_temperature = self._api.get_outdoor_temperature(
+            self._domain_objects
+        )
+        self._selected_schema = self._api.get_active_schema_name(
+            self._domain_objects
+        )
+        self._preset_mode = self._api.get_current_preset(
+            self._domain_objects
+        )
+        self._presets = self._api.get_presets(
+            self._domain_objects
+        )
+        self._presets_list = list(
+            self._api.get_presets(self._domain_objects)
+        )
+        self._heating_status = self._api.get_heating_status(
+            self._domain_objects
+        )
+        self._cooling_status = self._api.get_cooling_status(
+            self._domain_objects
+        )
+        self._dhw_status = self._api.get_domestic_hot_water_status(
+            self._domain_objects
+        )
+        self._schema_names = self._api.get_schema_names(
+            self._domain_objects
+        )
+        self._schema_status = self._api.get_schema_state(
+            self._domain_objects
+        )
+        self._current_temperature = self._api.get_current_temperature(
+            self._domain_objects
+        )
+        self._thermostat_temperature = self._api.get_thermostat_temperature(
+            self._domain_objects
+        )
+        self._schedule_temperature = self._api.get_schedule_temperature(
+            self._domain_objects
+        )
+        self._illuminance = self._api.get_illuminance(
+            self._domain_objects
+        )
+        self._boiler_temperature = self._api.get_boiler_temperature(
+            self._domain_objects
+        )
+        self._water_pressure = self._api.get_water_pressure(
+            self._domain_objects
         )
