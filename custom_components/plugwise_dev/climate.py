@@ -106,7 +106,7 @@ async def async_setup_platform(
             config[CONF_MAX_TEMP],
         )
     ]
-    async_add_entities(devices, True)
+    async_add_entities(devices)
 
 
 class ThermostatDevice(ClimateDevice):
