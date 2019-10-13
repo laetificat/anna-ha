@@ -174,14 +174,10 @@ class ThermostatDevice(ClimateDevice):
             attributes[
                 "outdoor_temperature"
             ] = self._outdoor_temperature
-        if self._schema_names is not None:
-            attributes[
-                "available_schemas"
-            ] = self._schema_names
-        if self._selected_schema is not None:
-            attributes[
-                "selected_schema"
-            ] = self._selected_schema
+        attributes["available_schemas"] = self._schema_names
+        attributes[
+            "selected_schema"
+        ] = self._selected_schema
         if self._illuminance is not None:
             attributes["illuminance"] = self._illuminance
         if self._boiler_temperature is not None:
