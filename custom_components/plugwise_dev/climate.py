@@ -40,6 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 # Configuration directives
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
+CONF_LEGACY = "legacy_anna"
 
 # Default directives
 DEFAULT_NAME = "Plugwise Development Thermostat"
@@ -66,6 +67,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(
+            CONF_LEGACY, default=False
+        ): cv.boolean,
+        vol.Optional(
             CONF_PORT, default=DEFAULT_PORT
         ): cv.port,
         vol.Optional(
@@ -90,6 +94,7 @@ async def async_setup_platform(
         config[CONF_PASSWORD],
         config[CONF_HOST],
         config[CONF_PORT],
+        config[CONF_LEGACY]
     )
     try:
         api.ping_anna_thermostat()
