@@ -13,11 +13,28 @@ Currently supports:
 - Getting scheduled state (and schedules)
 - Setting schedule active
 - Functional HVAC mode
+- Reading the domestic hot water status, when available
+- Reading the cooling status, when available
+- Reading illuminance
+- Reading current boiler temperature
+- Reading current boiler pressure
+- Reading outdoor temperature
+- BREAKING: manual confguration required for a legacy Anna (firmware 1.8.x), default is a recent Anna (firmware 3.1.x)
+- async and black implemented
 
 Todo:
 
 - Adam/Lisa integration
-- Ensure async so when timing skews, HA doesn't mention the 'google'-like link mentioned in https://github.com/laetificat/anna-ha/issues/16
+
+The configuration in `configuration.yaml` should contain as a minimum:
+```
+climate:
+  - platform: plugwise_dev
+    name: your_device_name
+    password: your_password
+    host: your_host_ip
+    legacy_anna: true (required for a legacy Anna, can be omitted for a recent Anna)
+```
 
 **NOTICE**
 
