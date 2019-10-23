@@ -94,7 +94,7 @@ async def async_setup_platform(
         config[CONF_PASSWORD],
         config[CONF_HOST],
         config[CONF_PORT],
-        config[CONF_LEGACY]
+        config[CONF_LEGACY],
     )
     try:
         api.ping_anna_thermostat()
@@ -336,7 +336,7 @@ class ThermostatDevice(ClimateDevice):
             self._domain_objects, preset_mode
         )
 
-    def update(self):
+    async def async_update(self):
         """Update the data from the thermostat."""
         _LOGGER.debug("Update called")
         self._domain_objects = (
