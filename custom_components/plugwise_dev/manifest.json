@@ -3,6 +3,6 @@
   "name": "Plugwise Development Anna",
   "documentation": "https://github.com/laetificat/anna-ha",
   "dependencies": [],
-  "codeowners": ["@laetificat","CoMPaTech","@bouwew"],
+  "codeowners": ["@laetificat","@CoMPaTech","@bouwew"],
   "requirements": ["haanna==0.13.5"]
 }
