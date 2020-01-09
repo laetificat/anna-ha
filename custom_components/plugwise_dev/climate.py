@@ -97,12 +97,14 @@ class ThermostatDevice(ClimateDevice):
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._name = name
+        self._direct_objects = None
         self._domain_objects = None
         self._outdoor_temperature = None
         self._selected_schema = None
         self._preset_mode = None
         self._presets = None
         self._presets_list = None
+        self._boiler_status = None
         self._heating_status = None
         self._cooling_status = None
         self._schema_names = None
@@ -117,7 +119,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_action(self):
         """Return the current action."""
-        if self._heating_status:
+        if self._heating_status or self._boiler_status:
             return CURRENT_HVAC_HEAT
         if self._cooling_status:
             return CURRENT_HVAC_COOL
@@ -169,7 +171,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the available hvac modes list."""
-        if self._heating_status is not None:
+        if self._heating_status is not None or self._boiler_status is not None:
             if self._cooling_status is not None:
                 return HVAC_MODES_2
             return HVAC_MODES_1
@@ -180,7 +182,7 @@ class ThermostatDevice(ClimateDevice):
         """Return current active hvac state."""
         if self._schema_status:
             return HVAC_MODE_AUTO
-        if self._heating_status:
+        if self._heating_status or self._boiler_status:
             if self._cooling_status:
                 return HVAC_MODE_HEAT_COOL
             return HVAC_MODE_HEAT
@@ -266,6 +268,7 @@ class ThermostatDevice(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         _LOGGER.debug("Update called")
+        self._direct_objects = self._api.get_direct_objects()
         self._domain_objects = self._api.get_domain_objects()
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
@@ -274,8 +277,9 @@ class ThermostatDevice(ClimateDevice):
         self._preset_mode = self._api.get_current_preset(self._domain_objects)
         self._presets = self._api.get_presets(self._domain_objects)
         self._presets_list = list(self._api.get_presets(self._domain_objects))
-        self._heating_status = self._api.get_heating_status(self._domain_objects)
-        self._cooling_status = self._api.get_cooling_status(self._domain_objects)
+        self._boiler_status = self._api.get_boiler_status(self._direct_objects)
+        self._heating_status = self._api.get_heating_status(self._direct_objects)
+        self._cooling_status = self._api.get_cooling_status(self._direct_objects)
         self._schema_names = self._api.get_schema_names(self._domain_objects)
         self._schema_status = self._api.get_schema_state(self._domain_objects)
         self._current_temperature = self._api.get_current_temperature(
