@@ -2,18 +2,17 @@
 
 import logging
 
-import voluptuous as vol
 import haanna
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
     CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_AUTO,
     HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -28,6 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -39,7 +39,7 @@ CONF_MAX_TEMP = "max_temp"
 CONF_LEGACY = "legacy_anna"
 
 # Default directives
-DEFAULT_NAME = "Plugwise Dev Thermostat"
+DEFAULT_NAME = "Plugwise Thermostat"
 DEFAULT_USERNAME = "smile"
 DEFAULT_TIMEOUT = 10
 DEFAULT_PORT = 80
