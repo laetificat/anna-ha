@@ -107,6 +107,7 @@ class ThermostatDevice(ClimateDevice):
         self._boiler_status = None
         self._heating_status = None
         self._cooling_status = None
+        self._dhw_status = None
         self._schema_names = None
         self._schema_status = None
         self._current_temperature = None
@@ -119,7 +120,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_action(self):
         """Return the current action."""
-        if self._heating_status or self._boiler_status:
+        if self._heating_status or self._boiler_status or self._dhw_status:
             return CURRENT_HVAC_HEAT
         if self._cooling_status:
             return CURRENT_HVAC_COOL
@@ -182,7 +183,7 @@ class ThermostatDevice(ClimateDevice):
         """Return current active hvac state."""
         if self._schema_status:
             return HVAC_MODE_AUTO
-        if self._heating_status or self._boiler_status:
+        if self._heating_status or self._boiler_status or self._dhw_status:
             if self._cooling_status:
                 return HVAC_MODE_HEAT_COOL
             return HVAC_MODE_HEAT
@@ -273,13 +274,18 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
         )
-        self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
+        self._selected_schema = self._api.get_active_schema_name(
+            self._domain_objects
+            )
         self._preset_mode = self._api.get_current_preset(self._domain_objects)
         self._presets = self._api.get_presets(self._domain_objects)
         self._presets_list = list(self._api.get_presets(self._domain_objects))
         self._boiler_status = self._api.get_boiler_status(self._direct_objects)
         self._heating_status = self._api.get_heating_status(self._direct_objects)
         self._cooling_status = self._api.get_cooling_status(self._direct_objects)
+        self._dhw_status = self._api.get_domestic_hot_water_status(
+            self._direct_objects
+            )
         self._schema_names = self._api.get_schema_names(self._domain_objects)
         self._schema_status = self._api.get_schema_state(self._domain_objects)
         self._current_temperature = self._api.get_current_temperature(
