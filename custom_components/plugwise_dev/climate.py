@@ -39,7 +39,7 @@ CONF_MAX_TEMP = "max_temp"
 CONF_LEGACY = "legacy_anna"
 
 # Default directives
-DEFAULT_NAME = "Plugwise Thermostat"
+DEFAULT_NAME = "Plugwise Dev Thermostat"
 DEFAULT_USERNAME = "smile"
 DEFAULT_TIMEOUT = 10
 DEFAULT_PORT = 80
