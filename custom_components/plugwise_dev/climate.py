@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ThermostatDevice(ClimateDevice):
-    """Representation of an Plugwise thermostat."""
+    """Representation of a Plugwise thermostat."""
 
     def __init__(self, api, name, min_temp, max_temp):
         """Set up the Plugwise API."""
@@ -274,18 +274,14 @@ class ThermostatDevice(ClimateDevice):
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
         )
-        self._selected_schema = self._api.get_active_schema_name(
-            self._domain_objects
-            )
+        self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
         self._preset_mode = self._api.get_current_preset(self._domain_objects)
         self._presets = self._api.get_presets(self._domain_objects)
         self._presets_list = list(self._api.get_presets(self._domain_objects))
         self._boiler_status = self._api.get_boiler_status(self._direct_objects)
         self._heating_status = self._api.get_heating_status(self._direct_objects)
         self._cooling_status = self._api.get_cooling_status(self._direct_objects)
-        self._dhw_status = self._api.get_domestic_hot_water_status(
-            self._direct_objects
-            )
+        self._dhw_status = self._api.get_domestic_hot_water_status(self._direct_objects)
         self._schema_names = self._api.get_schema_names(self._domain_objects)
         self._schema_status = self._api.get_schema_state(self._domain_objects)
         self._current_temperature = self._api.get_current_temperature(
