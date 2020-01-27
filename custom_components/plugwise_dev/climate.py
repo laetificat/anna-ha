@@ -1,4 +1,4 @@
-"""Plugwise Climate component for HomeAssistant."""
+"""Plugwise Climate component for Home Assistant."""
 
 import logging
 
@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Add the Plugwise (Anna) Thermostate."""
+    """Add the Plugwise (Anna) Thermostat."""
     api = haanna.Haanna(
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ThermostatDevice(ClimateDevice):
-    """Representation of a Plugwise thermostat."""
+    """Representation of the Plugwise thermostat."""
 
     def __init__(self, api, name, min_temp, max_temp):
         """Set up the Plugwise API."""
@@ -101,6 +101,7 @@ class ThermostatDevice(ClimateDevice):
         self._domain_objects = None
         self._outdoor_temperature = None
         self._selected_schema = None
+        self._last_active_schema = None
         self._preset_mode = None
         self._presets = None
         self._presets_list = None
@@ -119,7 +120,7 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def hvac_action(self):
-        """Return the current action."""
+        """Return the current hvac action."""
         if self._heating_status or self._boiler_status or self._dhw_status:
             return CURRENT_HVAC_HEAT
         if self._cooling_status:
@@ -153,8 +154,6 @@ class ThermostatDevice(ClimateDevice):
             attributes["available_schemas"] = "None"
         if self._selected_schema:
             attributes["selected_schema"] = self._selected_schema
-        else:
-            attributes["selected_schema"] = "None"
         if self._boiler_temperature:
             attributes["boiler_temperature"] = self._boiler_temperature
         if self._water_pressure:
@@ -203,9 +202,9 @@ class ThermostatDevice(ClimateDevice):
     def preset_mode(self):
         """Return the active selected schedule-name.
 
-        Or return the active preset, or return Temporary in case of a manual change
-        in the set-temperature with a weekschedule active,
-        or return Manual in case of a manual change and no weekschedule active.
+        Or, return the active preset, or return Temporary in case of a manual change
+        in the set-temperature with a weekschedule active.
+        Or return Manual in case of a manual change and no weekschedule active.
         """
         if self._presets:
             presets = self._presets
@@ -258,7 +257,7 @@ class ThermostatDevice(ClimateDevice):
         if hvac_mode == HVAC_MODE_AUTO:
             schema_mode = "true"
         self._api.set_schema_state(
-            self._domain_objects, self._selected_schema, schema_mode
+            self._domain_objects, self._last_active_schema, schema_mode
         )
 
     def set_preset_mode(self, preset_mode):
@@ -275,6 +274,9 @@ class ThermostatDevice(ClimateDevice):
             self._domain_objects
         )
         self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
+        self._last_active_schema = self._api.get_last_active_schema_name(
+            self._domain_objects
+        )
         self._preset_mode = self._api.get_current_preset(self._domain_objects)
         self._presets = self._api.get_presets(self._domain_objects)
         self._presets_list = list(self._api.get_presets(self._domain_objects))
