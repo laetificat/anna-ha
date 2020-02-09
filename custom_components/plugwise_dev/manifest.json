@@ -1,5 +1,5 @@
 {
-  "domain": "plugwise",
+  "domain": "plugwise_dev",
   "name": "Plugwise Anna",
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
   "dependencies": [],
