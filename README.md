@@ -1,3 +1,8 @@
+# This repository is no longer used -  @bouwew and @compatech now maintain plugwise-beta
+
+ - Custom component: [plugwise-beta](https://github.com/plugwise/plugwise-beta)
+ - Python module: [Plugwise-Smile](https://github.com/plugwise/Plugwise-Smile)
+
 # Plugwise custom_component for Home Assistant
 A **custom component** to develop an integration monitoring Plugwise Devices, for now only capable of the Anna thermostat.
 
